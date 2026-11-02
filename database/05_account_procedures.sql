@@ -181,7 +181,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM app.UserAccount WHERE UserId = @ActorUserId AND IsActive = 1 AND RoleCode = 'ADM')
         THROW 50001, 'Only administrators manage accounts.', 1;
     SELECT u.UserId, u.Login, u.DisplayName, u.RoleCode, ro.RoleName, u.RegionCode, u.IsActive,
-           CASE WHEN u.RoleCode IS NULL THEN 'Waiting for activation' WHEN u.IsActive = 1 THEN 'Active' ELSE 'Disabled' END AS AccountStatus,
+           CASE WHEN u.RoleCode IS NULL THEN 'Pending' WHEN u.IsActive = 1 THEN 'Active' ELSE 'Disabled' END AS AccountStatus,
            u.CreatedAt, u.RowVer
     FROM app.UserAccount AS u
     LEFT JOIN ref.Role AS ro ON ro.RoleCode = u.RoleCode

@@ -1,0 +1,18 @@
+[theme]
+base = "light"
+primaryColor = "#0A7FA0"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F2F5F7"
+textColor = "#1F2328"
+font = "sans serif"
+
+[client]
+toolbarMode = "minimal"
+
+[server]
+headless = true
+# Local only; change it deliberately before exposing the portal on a network.
+address = "localhost"
+
+[browser]
+gatherUsageStats = false

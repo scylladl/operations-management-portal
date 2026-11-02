@@ -501,3 +501,13 @@ BEGIN
     SELECT @Imported AS Imported;
 END;
 GO
+
+-- Action types and regions for the forms; the same for every user, so the app caches them
+CREATE OR ALTER PROCEDURE app.usp_ListReference
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT ActionTypeCode, ActionTypeName FROM ng.ActionType ORDER BY ActionTypeName;
+    SELECT RegionCode, RegionName FROM ng.Region ORDER BY RegionName;
+END;
+GO
