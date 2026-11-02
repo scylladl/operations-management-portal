@@ -58,10 +58,11 @@ with left:
         st.info("No incidents in the window: a request needs at least one.")
     st.subheader("Actions on this circuit")
     if evidence["history"]:
-        st.dataframe(pd.DataFrame(evidence["history"]), hide_index=True, width="stretch", column_config={
+        past = pd.DataFrame(evidence["history"])
+        past["StartDate"], past["CompletionDate"] = past["StartDate"].map(ui.day), past["CompletionDate"].map(ui.day)
+        st.dataframe(past, hide_index=True, width="stretch", column_config={
             "ActionId": st.column_config.NumberColumn("Action", format="%d"), "ActionTypeName": "Type",
-            "StatusName": "Status", "StartDate": st.column_config.DateColumn("Started", format="D MMM YYYY"),
-            "CompletionDate": st.column_config.DateColumn("Completed", format="D MMM YYYY"),
+            "StatusName": "Status", "StartDate": "Started", "CompletionDate": "Completed",
             "IsHistorical": st.column_config.CheckboxColumn("Before the portal")})
     else:
         st.caption("None.")

@@ -177,3 +177,17 @@ only the historical actions reproduces `NorthGridOps.ops.ImprovementAction` row 
 
 The tests run against `NorthGridPortal_Test`, created and dropped by the test run, so the demo data is never
 modified by tests.
+
+## 9. As built (2026-11-02)
+
+What the implementation changed or settled against sections 1 to 8:
+
+| Topic | As built | Why |
+|---|---|---|
+| Audit rows | Written by triggers on `app.Action`, `app.ActionIncident` and `app.UserAccount`, inside the transaction of the change. Each procedure puts the actor, event, reason and time in `SESSION_CONTEXT`; a change made without it is refused (error 50010). | One place writes the trail, so no procedure can forget it, and a manual `UPDATE` cannot change an action without leaving a record. |
+| Synonyms | Six: `ng.Circuit`, `ng.Customer`, `ng.Incident`, `ng.Region`, `ng.ActionType`, `ng.ImprovementAction`. | Customer names on the screens; the history import and the export check need the NorthGrid action table. |
+| Code layout | `app.py` and `pages/` at the repository root (Streamlit convention); `portal/` holds `db`, `auth`, `users`, `actions`, `config` and `ui`. | `streamlit run app.py` from the root; pages import the package. |
+| Demo clock | `app.Setting DemoClock`: when 1, procedures record the time the caller puts in `SESSION_CONTEXT('portal.clock')`. `deploy.ps1` sets it to 0; the seed and the tests switch it on. | Seeded requests need past dates for the queue ages and indicators to mean anything. |
+| Evidence | Cancelled tickets and duplicates are not evidence; the window is the 90 days ending on the latest incident date. | A cancelled or duplicate ticket is not a failure. |
+| Circuit list | `app.usp_ListCircuits @RegionCode`, cached by the app per region. | The inventory is the same for every user. |
+| Markdown | Text typed by users (justifications, reasons, notes, names) is escaped before Streamlit renders it. | Found in review: Markdown would turn user text into links, images or Streamlit directives. |

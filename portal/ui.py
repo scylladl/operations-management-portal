@@ -89,9 +89,9 @@ def action_table(rows, key, waiting=False, region=True):
     else:
         columns += ["StartDate", "CompletionDate"]
     frame = frame[columns].fillna({"RequesterName": "not recorded"})
-    for column in ("LastSubmittedAt", "StartDate", "CompletionDate"):
+    for column in ("StartDate", "CompletionDate"):
         if column in frame:
-            frame[column] = pd.to_datetime(frame[column])   # missing dates show as empty cells, not "None"
+            frame[column] = frame[column].map(day)   # as text, so a missing date is an empty cell, not "None"
     view = frame
     if waiting:
         # Q4: older than 5 working days is highlighted in the queue
@@ -105,8 +105,7 @@ def action_table(rows, key, waiting=False, region=True):
             "RequesterName": "Requester",
             "LastSubmittedAt": st.column_config.DatetimeColumn("Submitted", format="D MMM YYYY, HH:mm"),
             "WaitingWorkingDays": st.column_config.NumberColumn("Waiting (working days)", format="%d"),
-            "StartDate": st.column_config.DateColumn("Started", format="D MMM YYYY"),
-            "CompletionDate": st.column_config.DateColumn("Completed", format="D MMM YYYY"),
+            "StartDate": "Started", "CompletionDate": "Completed",
         })
     st.caption("Select a row to open the action.")
     if event.selection.rows:
