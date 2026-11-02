@@ -2,8 +2,8 @@
 
 > **SIMULATED SCENARIO.** NorthGrid Telecom S.A., its people, circuits and every figure are fictional.
 
-**Version 0.1, draft for approval** (2026-11-02). Written by the Head of B2B Service Assurance (fictional sponsor).
-Nothing here is approved until the open questions in section 9 are answered.
+**Version 1.0, approved 2026-11-02** by the Head of B2B Service Assurance (fictional sponsor), with the proposed
+answers to the open questions of section 9. Later changes go through `docs/02-change-log.md`.
 
 ## 1. Context
 
@@ -43,7 +43,7 @@ the place where improvement actions are recorded, replacing the e-mails and the 
 | Field coordinator | Field operations team leads | Record start, progress notes and completion of approved actions in their region |
 | Administrator | Service assurance office | Manage users, roles and regions; see everything; cannot approve their own requests |
 
-A person has one role and one region (administrators: all regions). Questions Q1 and Q5 may change this.
+A person has one role and one region (administrators: all regions). An approver may also request actions (Q5).
 
 ## 5. Workflow
 
@@ -66,7 +66,7 @@ stateDiagram-v2
     Cancelled --> [*]
 ```
 
-## 6. Rules (proposed)
+## 6. Rules
 
 | # | Topic | Rule |
 |---|---|---|
@@ -98,9 +98,9 @@ stateDiagram-v2
 E-mail or chat notifications (the portal shows each user their own queue), file attachments, single sign-on,
 cost and budget tracking, a mobile layout, and any change to the operations intelligence report or its KPIs.
 
-## 9. Open questions
+## 9. Decisions on the open questions
 
-| # | Question | Proposed answer |
+| # | Question | Decision |
 |---|---|---|
 | Q1 | Is the field coordinator a separate role, or does the requester record the work? | Separate role: execution is done by field teams, not by the engineers who analyse the circuits. |
 | Q2 | Does a completed action need a confirmation step (Verified), and who does it? | Yes, the approver of the region, so "done" means checked by the person who approved it. |
@@ -110,7 +110,7 @@ cost and budget tracking, a mobile layout, and any change to the operations inte
 | Q6 | What happens to the 558 historical actions? | Imported read-only as history (status and dates as they are, requester and approver "not recorded"), so circuits show their past actions. |
 | Q7 | Must actions recorded in the portal reach the operations intelligence report? | Yes, eventually: the portal becomes the source of improvement actions. How, and whether the report changes, is decided with the architecture, without changing its approved KPIs. |
 
-## 10. Acceptance criteria (proposed)
+## 10. Acceptance criteria
 
 | # | Criterion |
 |---|---|
