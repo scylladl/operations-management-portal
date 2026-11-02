@@ -44,8 +44,9 @@ def list_actions(conn, actor_id, view):
     return db.call(conn, "app.usp_ListActions", ActorUserId=actor_id, ListName=view)[0]
 
 
-def list_circuits(conn, actor_id):
-    return db.call(conn, "app.usp_ListCircuits", ActorUserId=actor_id)[0]
+def list_circuits(conn, region_code=None):
+    """Circuits that can be requested, with their incidents in the evidence window; all regions when None."""
+    return db.call(conn, "app.usp_ListCircuits", RegionCode=region_code)[0]
 
 
 def circuit_evidence(conn, actor_id, circuit_id):
