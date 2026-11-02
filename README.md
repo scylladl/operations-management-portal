@@ -11,7 +11,7 @@ how they are chosen and done.
 
 Built with **Python**, **Streamlit**, **SQL Server (T-SQL)** and PowerShell.
 
-![Action page: workflow stepper, request, details and history](docs/screenshots/12-verified-history.png)
+![Tour of the portal: sign-in, requests, decision queue, a returned request, versions, field work, verification, history, indicators and administration](docs/screenshots/portal-tour.gif)
 
 ## In 30 seconds
 
@@ -139,7 +139,7 @@ Checks:
 | `database/` | Numbered deployment scripts and `deploy.ps1` |
 | `portal/` | Data access, authentication, accounts, Streamlit helpers |
 | `app.py`, `pages/` | The Streamlit app |
-| `scripts/` | Demo seed, export for the NorthGrid report, walkthrough capture |
+| `scripts/` | Demo seed, export for the NorthGrid report, walkthrough capture, tour GIF |
 | `tests/` | pytest suite against a throwaway database |
 | `validation/` | Independent indicator query and the mutation check |
 | `TECHNICAL_DECISIONS.md` | Why it is built this way, and what was given up |
