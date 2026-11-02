@@ -4,7 +4,7 @@ from portal import auth, ui
 
 account = ui.account()
 st.title("My account")
-st.markdown(f"**{account['DisplayName']}** ({account['Login']})  \n{account['RoleName']}"
+st.markdown(f"**{ui.plain(account['DisplayName'])}** ({ui.plain(account['Login'])})  \n{account['RoleName']}"
             + (f", {account['RegionName']}" if account["RegionName"] else ", all regions"))
 st.caption("Your role and region are set by an administrator.")
 

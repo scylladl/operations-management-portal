@@ -76,7 +76,7 @@ if role == "ADM":
 sections["You"] = [page("pages/my_account.py", "My account", "person")]
 
 with st.sidebar:
-    st.markdown(f"**{account['DisplayName']}**  \n{account['RoleName']}"
+    st.markdown(f"**{ui.plain(account['DisplayName'])}**  \n{account['RoleName']}"
                 + (f" · {account['RegionName']}" if account["RegionName"] else " · all regions"))
     if st.button("Sign out", icon=":material/logout:"):
         st.session_state.clear()

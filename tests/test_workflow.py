@@ -10,7 +10,7 @@ import json
 import pytest
 
 from conftest import OTHER_REGION, PATHS, REGION, TODAY, row_ver, status
-from portal import actions, db
+from portal import actions, db, users
 
 ACTORS = ["owner", "req_x", "req_y", "apr_x", "apr_y", "fld_x", "fld_y", "adm"]
 DECIDERS = {"apr_x", "adm"}   # approvers of the action's region and administrators (R3)
@@ -272,7 +272,6 @@ def test_work_notes_only_by_field_coordinator_of_the_region(conn, people, build)
 
 
 def test_disabled_account_can_do_nothing(conn, people, build, password):
-    from portal import users
     temp = users.create_account(conn, people["adm"], "temp_apr", "Temp approver", "APR", REGION, password)
     action_id = build.action_in("Submitted")
     account = users.get_account(conn, temp)

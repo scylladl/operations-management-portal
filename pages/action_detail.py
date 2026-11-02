@@ -27,7 +27,7 @@ action_id = action["ActionId"]
 st.title(f"{action['ActionTypeName']} on {action['CircuitId']}")
 st.caption(ui.status_badge(action["Status"], action["StatusName"]) + " &nbsp; " + " · ".join(filter(None, [
     f"Action {action_id}", action["CustomerName"], action["Province"], action["RegionName"] or "no region",
-    f"requested by {action['RequesterName']}" if action["RequesterName"] else "requester not recorded",
+    f"requested by {ui.plain(action['RequesterName'])}" if action["RequesterName"] else "requester not recorded",
     f"version {action['VersionNo']}" if action["VersionNo"] else None])))
 if action["IsHistorical"]:
     st.info("Recorded before the portal (NorthGrid history): read only. A field coordinator of the region can "
@@ -37,8 +37,8 @@ if action["IsHistorical"]:
 status_changes = [e for e in detail["events"] if e["FieldName"] == "Status"]
 last = status_changes[-1] if status_changes else None
 if last and last["Reason"] and last["EventType"] != "IMPORT":
-    st.warning(f"**{ui.EVENT_LABELS[last['EventType']]}** by {last['ActorName']}, {ui.moment(last['EventAt'])}: "
-               f"{last['Reason']}", icon=":material/comment:")
+    st.warning(f"**{ui.EVENT_LABELS[last['EventType']]}** by {ui.plain(last['ActorName'])}, "
+               f"{ui.moment(last['EventAt'])}: {ui.plain(last['Reason'])}", icon=":material/comment:")
 
 content, side = st.columns([3, 2], gap="large")
 
@@ -104,13 +104,13 @@ with content:
                                  ("Justification", "Justification"), ("ExpectedOutcome", "Expected outcome")):
                 if new[field] != old[field]:
                     changed = True
-                    show = types.get if field == "ActionTypeCode" else str
+                    show = types.get if field == "ActionTypeCode" else ui.plain
                     st.markdown(f"**{label}**")
                     before, after = st.columns(2)
                     before.caption(f"Version {old['VersionNo']}")
-                    before.write(show(old[field]))
+                    before.markdown(show(old[field]))
                     after.caption(f"Version {new['VersionNo']}")
-                    after.write(show(new[field]))
+                    after.markdown(show(new[field]))
             added = sorted(set(json.loads(new["TicketIds"])) - set(json.loads(old["TicketIds"])))
             removed = sorted(set(json.loads(old["TicketIds"])) - set(json.loads(new["TicketIds"])))
             if added or removed:
@@ -120,9 +120,9 @@ with content:
                 st.caption("Resubmitted without changes.")
     if not action["IsHistorical"]:
         st.subheader("Justification")
-        st.write(action["Justification"] or "_Not written yet._")
+        st.markdown(ui.plain(action["Justification"]) or "_Not written yet._")
         st.subheader("Expected outcome")
-        st.write(action["ExpectedOutcome"] or "_Not written yet._")
+        st.markdown(ui.plain(action["ExpectedOutcome"]) or "_Not written yet._")
         st.subheader("Incidents it addresses")
         if detail["incidents"]:
             st.dataframe(pd.DataFrame(detail["incidents"]), hide_index=True, width="stretch", column_config={
@@ -135,7 +135,7 @@ with content:
                                         f"Work notes ({len(detail['notes'])})"])
     with versions:
         for v in detail["versions"]:
-            st.markdown(f"**Version {v['VersionNo']}**, submitted by {v['SubmittedBy']} on {ui.moment(v['SubmittedAt'])}  \n"
+            st.markdown(f"**Version {v['VersionNo']}**, submitted by {ui.plain(v['SubmittedBy'])} on {ui.moment(v['SubmittedAt'])}  \n"
                         f"Incidents: {', '.join(json.loads(v['TicketIds']))}")
         if not detail["versions"]:
             st.caption("Not submitted yet.")
@@ -162,12 +162,12 @@ with content:
                     lines.append(f"{ui.FIELD_LABELS[field]}: {new}" if old is None
                                  else f"{ui.FIELD_LABELS[field]}: {old} → {new or '–'}")
             reason = next((c["Reason"] for c in changes if c["Reason"]), None)
-            st.markdown(f"**{ui.EVENT_LABELS.get(event_type, event_type)}** · {actor} · {ui.moment(at)}  \n"
+            st.markdown(f"**{ui.EVENT_LABELS.get(event_type, event_type)}** · {ui.plain(actor)} · {ui.moment(at)}  \n"
                         + "; ".join(lines)
-                        + (f"  \n*Reason: {reason}*" if reason and event_type != "IMPORT" else ""))
+                        + (f"  \n*Reason: {ui.plain(reason)}*" if reason and event_type != "IMPORT" else ""))
         st.caption("The history is written by the database in the same transaction as each change and cannot be edited.")
     with notes:
         for n in detail["notes"]:
-            st.markdown(f"**{n['CreatedBy']}** · {ui.moment(n['CreatedAt'])}  \n{n['NoteText']}")
+            st.markdown(f"**{ui.plain(n['CreatedBy'])}** · {ui.moment(n['CreatedAt'])}  \n{ui.plain(n['NoteText'])}")
         if not detail["notes"]:
             st.caption("No notes.")

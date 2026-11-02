@@ -1,4 +1,6 @@
 """Streamlit helpers shared by the pages: connection, the signed-in account, tables, badges and command feedback."""
+import re
+
 import pandas as pd
 import streamlit as st
 
@@ -40,6 +42,14 @@ def reference():
 def circuits(region_code):
     """The circuit inventory is not private, so one cached copy per region serves every user."""
     return actions.list_circuits(connection(), region_code)
+
+
+MARKDOWN = re.compile(r"([\\`*_{}\[\]()#+\-.!|<>~$:])")
+
+
+def plain(text):
+    """Text typed by users, shown inside Markdown as written: no links, images, HTML or Streamlit directives."""
+    return MARKDOWN.sub(r"\\\1", text) if text else text
 
 
 def status_badge(status, name):
@@ -109,9 +119,9 @@ def run(command, done, then=None):
         command()
     except db.Changed as error:
         st.warning(f"{error} The page now shows the current state.")
-        return False
+        return
     except db.PortalError as error:
         st.error(str(error))
-        return False
+        return
     st.toast(done, icon=":material/check:")
     then() if then else st.rerun()

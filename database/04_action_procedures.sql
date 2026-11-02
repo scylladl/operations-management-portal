@@ -368,8 +368,7 @@ BEGIN
 
     SELECT TransitionCode, ActionLabel, ToStatus, RequiresReason
     FROM app.fn_AllowedTransitions(@ActorUserId, @ActionId)
-    ORDER BY CASE TransitionCode WHEN 'APPROVE' THEN 1 WHEN 'VERIFY' THEN 1 WHEN 'SUBMIT' THEN 1 WHEN 'RESUBMIT' THEN 1
-                                 WHEN 'START' THEN 1 WHEN 'COMPLETE' THEN 1 ELSE 2 END, TransitionCode;
+    ORDER BY RequiresReason, TransitionCode;   -- the step forward first, then the ones that need a reason
 END;
 GO
 
@@ -487,7 +486,7 @@ BEGIN
         LEFT JOIN ng.Circuit AS c ON c.CircuitId = h.CircuitId;
         DECLARE @Imported int = @@ROWCOUNT;
         SET IDENTITY_INSERT app.Action OFF;
-        -- Explicit ids move the identity down to 558; portal actions keep starting at 10001
+        -- After explicit ids the identity can resume at 559; portal actions keep starting at 10001
         IF IDENT_CURRENT('app.Action') < 10001
             DBCC CHECKIDENT ('app.Action', RESEED, 10000) WITH NO_INFOMSGS;
         COMMIT;

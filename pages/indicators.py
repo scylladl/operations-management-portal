@@ -7,7 +7,7 @@ from portal import actions, ui
 account = ui.account()
 everything = account["RoleCode"] == "ADM"
 data = actions.indicators(ui.connection(), account["UserId"])
-types, regions = ui.reference()
+_, regions = ui.reference()
 
 st.title("Indicators")
 st.caption(("All regions. " if everything else f"{account['RegionName']}. ")

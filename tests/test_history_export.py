@@ -41,7 +41,7 @@ def historical_in_progress(conn, people):
         ORDER BY a.ActionId""", OTHER_REGION).fetchval()
 
 
-def test_field_coordinator_records_completion_of_historical_action(conn, people, build, historical_in_progress):
+def test_field_coordinator_records_completion_of_historical_action(conn, people, historical_in_progress):
     action_id = historical_in_progress
     buttons = {t["TransitionCode"] for t in actions.get_action(conn, people["fld_y"], action_id)["transitions"]}
     assert buttons == {"COMPLETE"}

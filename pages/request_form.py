@@ -14,7 +14,7 @@ if action_id:
     try:
         editing = actions.get_action(conn, me, action_id)
     except db.NotFound:
-        editing = None
+        pass
     if editing and (editing["action"]["RequesterId"] != me or editing["action"]["Status"] not in ("Draft", "Returned")):
         editing = None
 if not editing:
@@ -25,7 +25,7 @@ st.title(f"Edit request {current['ActionId']}" if editing else "New request")
 if current.get("Status") == "Returned":
     reason = next((e for e in reversed(editing["events"]) if e["EventType"] == "RETURN" and e["Reason"]), None)
     if reason:
-        st.warning(f"Returned by {reason['ActorName']}: {reason['Reason']}", icon=":material/undo:")
+        st.warning(f"Returned by {ui.plain(reason['ActorName'])}: {ui.plain(reason['Reason'])}", icon=":material/undo:")
 
 inventory = ui.circuits(None if account["RoleCode"] == "ADM" else account["RegionCode"])
 labels = {c["CircuitId"]: f"{c['CircuitId']} · {c['CustomerName']} · {c['Province']} · {c['RecentIncidents']} recent incident(s)"
