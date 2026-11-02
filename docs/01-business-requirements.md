@@ -2,7 +2,7 @@
 
 > **SIMULATED SCENARIO.** NorthGrid Telecom S.A., its people, circuits and every figure are fictional.
 
-**Version 1.0, approved 2026-11-02** by the Head of B2B Service Assurance (fictional sponsor), with the proposed
+**Version 1.1, approved 2026-11-02** by the Head of B2B Service Assurance (fictional sponsor), with the proposed
 answers to the open questions of section 9. Later changes go through `docs/02-change-log.md`.
 
 ## 1. Context
@@ -82,6 +82,8 @@ stateDiagram-v2
 | R10 | Visibility | Requesters see their own requests and, read-only, the open actions of their region. Approvers and field coordinators see their region. Administrators see everything. |
 | R11 | Accounts | Accounts are created by an administrator, or requested by the user and activated by an administrator. Disabled accounts cannot sign in. Passwords are stored as slow salted hashes, never in clear. |
 | R12 | Concurrent edits | If two people act on the same action at the same time, the second one is told the action changed and sees its current state; no decision is overwritten silently. |
+| R13 | Circuits that cannot be requested | A request cannot be created for a circuit without a region in the inventory or with a decommission date; the portal says why. (CR-02, CR-03) |
+| R14 | Historical actions in progress | A field coordinator of the circuit's region can record the completion date of a historical action that is in progress. Nothing else in a historical action can change. (CR-01) |
 
 ## 7. Follow-up indicators (definitions to be validated before they are built)
 
@@ -107,7 +109,7 @@ cost and budget tracking, a mobile layout, and any change to the operations inte
 | Q3 | Do some action types need a second approval (for example technology migrations)? | No second level in version 1; the action type is visible to the approver. |
 | Q4 | Is there a target time for decisions? | 5 working days; older requests are highlighted in the approver's queue. |
 | Q5 | Can an approver also request actions? | Yes; their own requests go to another approver of the region or to an administrator (R3). |
-| Q6 | What happens to the 558 historical actions? | Imported read-only as history (status and dates as they are, requester and approver "not recorded"), so circuits show their past actions. |
+| Q6 | What happens to the 558 historical actions? | Imported read-only as history (status and dates as they are, requester and approver "not recorded"), so circuits show their past actions. Exception: R14. |
 | Q7 | Must actions recorded in the portal reach the operations intelligence report? | Yes, eventually: the portal becomes the source of improvement actions. How, and whether the report changes, is decided with the architecture, without changing its approved KPIs. |
 
 ## 10. Acceptance criteria

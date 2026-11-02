@@ -2,7 +2,7 @@
 
 > **SIMULATED SCENARIO.** NorthGrid Telecom and all its data are fictional.
 
-**Status: proposal for approval** (2026-11-02). Nothing below is built yet.
+**Status: approved 2026-11-02**, together with CR-01 to CR-03 (`docs/02-change-log.md`).
 
 ## 1. Where the portal's data lives
 
@@ -130,7 +130,7 @@ users' password from the `PORTAL_DEMO_PASSWORD` environment variable.
 
 **Historical actions (Q6).** The 558 actions are imported with their original ids, status and dates, and
 `IsHistorical = 1`. They have no requester, approver, evidence or versions, and the portal shows them read-only on
-the circuit page. New actions start at id 10001, so the two ranges never collide.
+the circuit page, except that a field coordinator can record the completion of one in progress (R14). New actions start at id 10001, so the two ranges never collide.
 
 **Demo users.** One administrator. Per region: two requesters, one field coordinator and one approver; two regions
 get a second approver, so Q5 (an approver's own request decided by another approver) can be shown. Names are
