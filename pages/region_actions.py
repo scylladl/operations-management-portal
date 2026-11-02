@@ -5,18 +5,19 @@ from portal import actions, ui
 
 account = ui.account()
 everything = account["RoleCode"] == "ADM"
-st.title("All actions" if everything else f"Actions in {account['RegionName']}")
-if account["RoleCode"] == "REQ":
-    st.caption("Your own requests and the open actions of your region.")
 rows = actions.list_actions(ui.connection(), account["UserId"], "all" if everything else "region")
+ui.header("Look up", "All actions" if everything else f"Actions in {account['RegionName']}",
+          "Your own requests and the open actions of your region." if account["RoleCode"] == "REQ" else None)
 
 types, regions = ui.reference()
-filters = st.columns([2, 2, 2, 1] if everything else [2, 2, 1])
-statuses = filters[0].multiselect("Status", sorted({r["StatusName"] for r in rows}))
-chosen_types = filters[1].multiselect("Type", list(types.values()))
-if everything:
-    chosen_regions = filters[2].multiselect("Region", list(regions), format_func=regions.get)
-history = filters[-1].toggle("History", help="Actions recorded before the portal (read only)")
+with st.container(border=True, key="panel-filters"):
+    filters = st.columns([2, 2, 2, 1] if everything else [2, 2, 1], vertical_alignment="bottom")
+    statuses = filters[0].multiselect("Status", sorted({r["StatusName"] for r in rows}), placeholder="All statuses")
+    chosen_types = filters[1].multiselect("Type", list(types.values()), placeholder="All types")
+    if everything:
+        chosen_regions = filters[2].multiselect("Region", list(regions), format_func=regions.get,
+                                                placeholder="All regions")
+    history = filters[-1].toggle("History", help="Actions recorded before the portal (read only)")
 
 frame = pd.DataFrame(rows)
 if not frame.empty:

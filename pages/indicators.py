@@ -2,18 +2,17 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
-from portal import actions, ui
+from portal import actions, components, ui
 
 account = ui.account()
 everything = account["RoleCode"] == "ADM"
 data = actions.indicators(ui.connection(), account["UserId"])
 _, regions = ui.reference()
 
-st.title("Indicators")
-st.caption(("All regions. " if everything else f"{account['RegionName']}. ")
-           + "Portal requests only; the history recorded before the portal has no submissions or decisions. "
-             "Working days are Monday to Friday, without holidays. Definitions in docs/01-business-requirements.md, "
-             "section 7, and database/06_reporting.sql.")
+ui.header("Decide", "Indicators",
+          ("All regions. " if everything else f"{account['RegionName']}. ")
+          + "Portal requests only; the history recorded before the portal has no submissions or decisions. "
+            "Working days are Monday to Friday, without holidays.")
 
 waiting = pd.DataFrame(data["waiting"], columns=["RegionCode", "WaitingBucket", "Actions"])
 decisions = pd.DataFrame(data["decisions"], columns=["RegionCode", "Decided", "Approved", "Rejected",
@@ -46,31 +45,40 @@ tiles[3].metric("Days to complete", f"{to_complete:.1f}" if to_complete is not N
                 help="Average calendar days from the approval to the completion date.")
 tiles[3].caption(f"{int(completion['Completed'].sum())} completed or verified")
 
+def styled(chart):
+    """Charts sit on white panels: white background, quiet axes and grid, the app's font."""
+    return (chart.configure(background="#FFFFFF", font="Inter")
+            .configure_axis(labelColor="#5B6677", titleColor="#5B6677", gridColor="#E3E8EF", domainColor="#DDE3EC",
+                            tickColor="#DDE3EC", labelFontSize=12, titleFontSize=12)
+            .configure_view(strokeWidth=0))
+
+
 STATUS_ORDER = ["Submitted", "Returned", "Approved", "InProgress", "Completed", "Verified", "Rejected", "Cancelled"]
 STATUS_NAMES = {"InProgress": "In progress"}
 left, right = st.columns(2, gap="large")
-with left:
-    st.subheader("Waiting by age")
+with left, st.container(border=True, key="panel-ages"):
+    st.html(components.section("Waiting for a decision, by age"))
     ages = (waiting.groupby("WaitingBucket")["Actions"].sum()
             .reindex(["0-2", "3-5", "Over 5"], fill_value=0).rename_axis("Working days").reset_index())
-    st.altair_chart(
+    st.altair_chart(styled(
         alt.Chart(ages).mark_bar(color="#0A7FA0", cornerRadiusTopLeft=4, cornerRadiusTopRight=4, size=48)
         .encode(x=alt.X("Working days:N", sort=None, axis=alt.Axis(labelAngle=0)),
                 y=alt.Y("Actions:Q", axis=alt.Axis(tickMinStep=1, grid=True, gridOpacity=0.3), title="Requests"),
                 tooltip=["Working days", "Actions"])
-        .properties(height=260), width="stretch")
-with right:
-    st.subheader("Requests by status")
+        .properties(height=260)), width="stretch", theme=None)
+with right, st.container(border=True, key="panel-statuses"):
+    st.html(components.section("Requests by status"))
     statuses = (by_status.groupby("Status")["Actions"].sum().reindex(STATUS_ORDER, fill_value=0)
                 .rename(index=STATUS_NAMES).rename_axis("Status").reset_index())
-    st.altair_chart(
+    st.altair_chart(styled(
         alt.Chart(statuses).mark_bar(color="#0A7FA0", cornerRadiusTopRight=4, cornerRadiusBottomRight=4, size=18)
         .encode(y=alt.Y("Status:N", sort=None, title=None),
                 x=alt.X("Actions:Q", axis=alt.Axis(tickMinStep=1, grid=True, gridOpacity=0.3), title="Requests"),
                 tooltip=["Status", "Actions"])
-        .properties(height=260), width="stretch")
+        .properties(height=260)), width="stretch", theme=None)
 
 st.subheader("By region" if everything else "Detail")
+st.caption("Definitions: docs/01-business-requirements.md, section 7, and database/06_reporting.sql.")
 table = (decisions.merge(completion, on="RegionCode", how="outer")
          .merge(waiting.groupby("RegionCode")["Actions"].sum().rename("Waiting").reset_index(), on="RegionCode",
                 how="outer"))

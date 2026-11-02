@@ -4,34 +4,40 @@ from itertools import groupby
 import pandas as pd
 import streamlit as st
 
-from portal import actions, db, ui, users
+from portal import actions, components, db, ui, users
 
 account = ui.account()
 conn = ui.connection()
 me = account["UserId"]
 types, _ = ui.reference()
 
-wanted = st.number_input("Open action number", min_value=1, step=1, value=st.session_state.get("action_id"),
-                         placeholder="Type an action number", width=220)
+top, find = st.columns([5, 1], vertical_alignment="bottom")
+wanted = find.number_input("Go to action", min_value=1, step=1, value=st.session_state.get("action_id"),
+                           placeholder="Number")
 if not wanted:
+    with top:
+        ui.header("Look up", "Open an action", "Type an action number, or open one from a queue or a list.")
     st.stop()
 try:
     detail = actions.get_action(conn, me, int(wanted))
 except db.NotFound as error:
+    with top:
+        ui.header("Look up", "Open an action")
     st.error(str(error))
     st.stop()
 st.session_state["action_id"] = int(wanted)
 action = detail["action"]
 action_id = action["ActionId"]
 
-st.title(f"{action['ActionTypeName']} on {action['CircuitId']}")
-st.caption(ui.status_badge(action["Status"], action["StatusName"]) + " &nbsp; " + " · ".join(filter(None, [
-    f"Action {action_id}", action["CustomerName"], action["Province"], action["RegionName"] or "no region",
-    f"requested by {ui.plain(action['RequesterName'])}" if action["RequesterName"] else "requester not recorded",
-    f"version {action['VersionNo']}" if action["VersionNo"] else None])))
+with top:
+    st.html(components.header(f"Action {action_id} · {action['RegionName'] or 'no region'}",
+                              f"{action['ActionTypeName']} on {action['CircuitId']}")
+            + components.pill(action["Status"], action["StatusName"]))
 if action["IsHistorical"]:
     st.info("Recorded before the portal (NorthGrid history): read only. A field coordinator of the region can "
             "record the completion of one still in progress.", icon=":material/history:")
+else:
+    st.html(components.stepper(action["Status"], action["StartDate"] is not None))
 
 # The reason behind the current status (returned, rejected, cancelled, reopened), while it still applies
 status_changes = [e for e in detail["events"] if e["FieldName"] == "Status"]
@@ -43,15 +49,15 @@ if last and last["Reason"] and last["EventType"] != "IMPORT":
 content, side = st.columns([3, 2], gap="large")
 
 with side:
-    with st.container(border=True):
-        st.markdown("**What you can do**")
+    with st.container(border=True, key="panel-actions"):
+        st.html(components.section("What you can do"))
         if not detail["transitions"]:
             st.caption("Nothing for you at this step.")
         for t in detail["transitions"]:
             code = t["TransitionCode"]
             if t["RequiresReason"] or code in ("START", "COMPLETE"):
                 with st.popover(t["ActionLabel"], width="stretch"):
-                    with st.form(f"form_{code}"):
+                    with st.form(f"form_{code}", border=False):
                         reason = st.text_area("Reason (the requester sees it)") if t["RequiresReason"] else None
                         event_date = (st.date_input("Start date" if code == "START" else "Completion date",
                                                     format="DD/MM/YYYY")
@@ -69,7 +75,7 @@ with side:
                 ui.edit_request(action_id)
         if account["RoleCode"] == "FLD" and action["Status"] == "InProgress":
             with st.popover("Add a work note", width="stretch"):
-                with st.form("note", clear_on_submit=True):
+                with st.form("note", clear_on_submit=True, border=False):
                     note = st.text_area("Note")
                     if st.form_submit_button("Add note", type="primary"):
                         ui.run(lambda: actions.add_work_note(conn, me, action_id, note), "Note added")
@@ -80,18 +86,22 @@ with side:
                               if u["IsActive"] and (u["RoleCode"] == "ADM" or (
                                   u["RoleCode"] in ("REQ", "APR") and u["RegionCode"] == action["RegionCode"]))
                               and u["UserId"] != action["RequesterId"]]
-                with st.form("owner"):
+                with st.form("owner", border=False):
                     new_owner = st.selectbox("New owner", candidates, format_func=lambda u: u["DisplayName"])
                     reason = st.text_area("Reason")
                     if st.form_submit_button("Change owner", type="primary"):
                         ui.run(lambda: actions.change_owner(conn, me, action_id, action["RowVer"],
                                                             new_owner["UserId"], reason), "Owner changed")
 
-    with st.container(border=True):
-        st.markdown("**Dates**")
-        st.markdown(f"Last submitted: {ui.moment(action['LastSubmittedAt']) or '–'}  \n"
-                    f"Work started: {ui.day(action['StartDate']) or '–'}  \n"
-                    f"Completed: {ui.day(action['CompletionDate']) or '–'}")
+    with st.container(border=True, key="panel-details"):
+        st.html(components.section("Details")
+                + components.facts([
+                    ("Circuit", action["CircuitId"]), ("Customer", action["CustomerName"]),
+                    ("Technology", action["TechnologyCode"]), ("Province", action["Province"]),
+                    ("Region", action["RegionName"]),
+                    ("Requester", action["RequesterName"] or "not recorded"),
+                    ("Version", action["VersionNo"] or None), ("Last submitted", ui.moment(action["LastSubmittedAt"])),
+                    ("Work started", ui.day(action["StartDate"])), ("Completed", ui.day(action["CompletionDate"]))]))
 
 with content:
     if len(detail["versions"]) >= 2:
@@ -119,29 +129,24 @@ with content:
             if not changed:
                 st.caption("Resubmitted without changes.")
     if not action["IsHistorical"]:
-        st.subheader("Justification")
-        st.markdown(ui.plain(action["Justification"]) or "_Not written yet._")
-        st.subheader("Expected outcome")
-        st.markdown(ui.plain(action["ExpectedOutcome"]) or "_Not written yet._")
-        st.subheader("Incidents it addresses")
-        if detail["incidents"]:
-            st.dataframe(pd.DataFrame(detail["incidents"]), hide_index=True, width="stretch", column_config={
-                "TicketId": "Ticket", "OpenedAt": st.column_config.DatetimeColumn("Opened", format="D MMM YYYY, HH:mm"),
-                "PriorityCode": "Priority", "RootCauseCode": "Root cause", "ResponsibleTeam": "Team", "Status": "Status"})
-        else:
-            st.caption("None linked yet.")
+        with st.container(border=True, key="panel-request"):
+            st.html(components.section("Justification"))
+            st.markdown(ui.plain(action["Justification"]) or "_Not written yet._")
+            st.html(components.section("Expected outcome"))
+            st.markdown(ui.plain(action["ExpectedOutcome"]) or "_Not written yet._")
+            st.html(components.section(f"Incidents it addresses · {len(detail['incidents'])}"))
+            if detail["incidents"]:
+                st.dataframe(pd.DataFrame(detail["incidents"]), hide_index=True, width="stretch", column_config={
+                    "TicketId": "Ticket", "OpenedAt": st.column_config.DatetimeColumn("Opened", format="D MMM YYYY, HH:mm"),
+                    "PriorityCode": "Priority", "RootCauseCode": "Root cause", "ResponsibleTeam": "Team",
+                    "Status": "Status"})
+            else:
+                st.caption("None linked yet.")
 
-    versions, history, notes = st.tabs([f"Versions ({len(detail['versions'])})", "History",
+    history, versions, notes = st.tabs(["History", f"Versions ({len(detail['versions'])})",
                                         f"Work notes ({len(detail['notes'])})"])
-    with versions:
-        for v in detail["versions"]:
-            st.markdown(f"**Version {v['VersionNo']}**, submitted by {ui.plain(v['SubmittedBy'])} on {ui.moment(v['SubmittedAt'])}  \n"
-                        f"Incidents: {', '.join(json.loads(v['TicketIds']))}")
-        if not detail["versions"]:
-            st.caption("Not submitted yet.")
     with history:
-        if not detail["events"]:
-            st.caption("No changes recorded.")
+        entries = []
         for (at, actor, event_type), group in groupby(detail["events"],
                                                       key=lambda e: (e["EventAt"], e["ActorName"], e["EventType"])):
             changes = list(group)
@@ -149,7 +154,7 @@ with content:
             for change in changes:
                 field, old, new = change["FieldName"], change["OldValue"], change["NewValue"]
                 if field == "RequesterId" and old is None:
-                    continue   # set on creation; the requester is named in the header
+                    continue   # set on creation; the requester is named in the details
                 if field in ("Justification", "ExpectedOutcome"):
                     lines.append(f"{ui.FIELD_LABELS[field]} {'written' if old is None else 'edited'}")
                 elif field == "Incident":
@@ -162,12 +167,20 @@ with content:
                     lines.append(f"{ui.FIELD_LABELS[field]}: {new}" if old is None
                                  else f"{ui.FIELD_LABELS[field]}: {old} → {new or '–'}")
             reason = next((c["Reason"] for c in changes if c["Reason"]), None)
-            st.markdown(f"**{ui.EVENT_LABELS.get(event_type, event_type)}** · {ui.plain(actor)} · {ui.moment(at)}  \n"
-                        + "; ".join(lines)
-                        + (f"  \n*Reason: {ui.plain(reason)}*" if reason and event_type != "IMPORT" else ""))
-        st.caption("The history is written by the database in the same transaction as each change and cannot be edited.")
+            entries.append((actor, ui.EVENT_LABELS.get(event_type, event_type), ui.moment(at), lines,
+                            reason if event_type != "IMPORT" else None))
+        if entries:
+            st.html(components.timeline(entries))
+        st.caption("Written by the database in the same transaction as each change; it cannot be edited.")
+    with versions:
+        for v in detail["versions"]:
+            st.markdown(f"**Version {v['VersionNo']}**, submitted by {ui.plain(v['SubmittedBy'])} on "
+                        f"{ui.moment(v['SubmittedAt'])}  \nIncidents: {', '.join(json.loads(v['TicketIds']))}")
+        if not detail["versions"]:
+            st.caption("Not submitted yet.")
     with notes:
-        for n in detail["notes"]:
-            st.markdown(f"**{ui.plain(n['CreatedBy'])}** · {ui.moment(n['CreatedAt'])}  \n{ui.plain(n['NoteText'])}")
-        if not detail["notes"]:
+        if detail["notes"]:
+            st.html(components.timeline([(n["CreatedBy"], "Work note", ui.moment(n["CreatedAt"]), [n["NoteText"]], None)
+                                         for n in detail["notes"]]))
+        else:
             st.caption("No notes.")

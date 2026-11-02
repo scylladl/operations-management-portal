@@ -1,10 +1,30 @@
+# "Service desk" design: navy sidebar with the NorthGrid mark, light canvas, white cards (assets/portal.css).
+# Inter comes from Google Fonts; without internet the browser falls back to its sans-serif font.
 [theme]
 base = "light"
 primaryColor = "#0A7FA0"
-backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F2F5F7"
-textColor = "#1F2328"
-font = "sans serif"
+backgroundColor = "#F4F6FA"
+secondaryBackgroundColor = "#EBEFF5"
+textColor = "#1B2433"
+borderColor = "#DDE3EC"
+showWidgetBorder = true
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap, sans-serif"
+headingFontWeights = [700, 650, 600, 600, 600, 600]
+headingFontSizes = ["1.9rem", "1.35rem", "1.1rem"]
+baseRadius = "0.6rem"
+buttonRadius = "0.5rem"
+metricValueFontSize = "1.9rem"
+metricValueFontWeight = 650
+dataframeHeaderBackgroundColor = "#EEF2F7"
+dataframeBorderColor = "#E3E8EF"
+chartCategoricalColors = ["#0A7FA0"]
+
+[theme.sidebar]
+backgroundColor = "#0F1E36"
+secondaryBackgroundColor = "#1A2C4A"
+textColor = "#E7EDF6"
+borderColor = "#24385A"
+primaryColor = "#4FC3E0"
 
 [client]
 toolbarMode = "minimal"

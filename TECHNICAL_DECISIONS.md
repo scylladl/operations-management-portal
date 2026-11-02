@@ -65,3 +65,12 @@ deploy sets it to 0. Cost: one setting that must stay off in production (deploy 
 The suite deploys `NorthGridPortal_Test` from the scripts, runs, and drops it, so the demo data is never touched.
 Because most tests passed on their first run, `validation/mutation_check.py` breaks eight rules one at a time and
 confirms each one fails the suite; it found one gap, now covered.
+
+## D-10 Design through the native theme first, CSS only on the portal's own pieces
+
+The "Service desk" design (chosen by the client among three directions) comes mostly from Streamlit's theme:
+colours, the navy sidebar, Inter, radii, table headers. What the theme cannot do (queue cards, the workflow stepper,
+the history timeline, the sign-in panel) is HTML built in `portal/components.py`, with every database value
+escaped, and styled by `assets/portal.css`, which targets only those classes and keyed containers, never
+Streamlit's internal class names. Cost: the Inter font loads from Google Fonts, so a browser without internet
+access falls back to its own sans-serif; a stricter deployment would host the font files with the app.

@@ -1,17 +1,20 @@
-"""Streamlit helpers shared by the pages: connection, the signed-in account, tables, badges and command feedback."""
+"""Streamlit helpers shared by the pages: connection, the signed-in account, cards, tables and command feedback."""
 import re
 
 import pandas as pd
 import streamlit as st
 
-from portal import actions, config, db
+from portal import actions, components, config, db
 
 DETAIL_PAGE = "pages/action_detail.py"
 FORM_PAGE = "pages/request_form.py"
 
-STATUS_COLORS = {"Draft": "gray", "Submitted": "blue", "Returned": "orange", "Rejected": "red",
-                 "Approved": "violet", "InProgress": "blue", "Completed": "green", "Verified": "green",
-                 "Cancelled": "gray"}
+# Text and background of each status, as in assets/portal.css (all pairs above 4.5:1)
+STATUS_STYLE = {"Draft": ("#475467", "#EEF1F5"), "Submitted": ("#1D4ED8", "#E7EFFE"),
+                "Returned": ("#8A4B00", "#FFF1DB"), "Approved": ("#6D28D9", "#F1EAFE"),
+                "InProgress": ("#065F76", "#E0F4F9"), "Completed": ("#17703D", "#E3F5EA"),
+                "Verified": ("#0F5132", "#D3EFDF"), "Rejected": ("#B42318", "#FDEBEA"),
+                "Cancelled": ("#525C6B", "#EEEFF2")}
 EVENT_LABELS = {"SAVE": "Saved", "SUBMIT": "Submitted", "RESUBMIT": "Resubmitted", "APPROVE": "Approved",
                 "RETURN": "Returned for changes", "REJECT": "Rejected", "START": "Work started",
                 "COMPLETE": "Completion recorded", "VERIFY": "Verified", "REOPEN": "Reopened", "CANCEL": "Cancelled",
@@ -52,17 +55,16 @@ def plain(text):
     return MARKDOWN.sub(r"\\\1", text) if text else text
 
 
-def status_badge(status, name):
-    """Markdown for a status badge; the status name is always written, colour only supports it."""
-    return f":{STATUS_COLORS[status]}-badge[{name}]"
-
-
 def day(value):
     return value.strftime("%d %b %Y").lstrip("0") if value else ""
 
 
 def moment(value):
     return value.strftime("%d %b %Y, %H:%M").lstrip("0") if value else ""
+
+
+def header(kicker, title, subtitle=None):
+    st.html(components.header(kicker, title, subtitle))
 
 
 def open_action(action_id):
@@ -75,37 +77,43 @@ def edit_request(action_id=None):
     st.switch_page(FORM_PAGE)
 
 
-def action_table(rows, key, waiting=False, region=True):
-    """Actions as a table; selecting a row opens the action."""
+def action_cards(rows, key, waiting=False, empty="Nothing waiting here."):
+    """Queues as cards, one per action, each with a button that opens it."""
     if not rows:
-        st.info("Nothing here.")
+        st.info(empty, icon=":material/check_circle:")
         return
-    frame = pd.DataFrame(rows)
-    columns = ["ActionId", "CircuitId", "ActionTypeName", "StatusName", "RequesterName"]
-    if region:
-        columns.insert(3, "RegionCode")
-    if waiting:
-        columns += ["LastSubmittedAt", "WaitingWorkingDays"]
-    else:
-        columns += ["StartDate", "CompletionDate"]
-    frame = frame[columns].fillna({"RequesterName": "not recorded"})
+    for row in rows:
+        started = f"started {day(row['StartDate'])}" if row.get("StartDate") else None
+        with st.container(border=True, key=f"card-{key}-{row['ActionId']}"):
+            text, button = st.columns([7, 1], vertical_alignment="center")
+            text.html(components.action_card({**row, "Started": started}, waiting))
+            if button.button("Open", key=f"open-{key}-{row['ActionId']}", width="stretch"):
+                open_action(row["ActionId"])
+
+
+def action_table(rows, key, region=True):
+    """Long lists as a table; selecting a row opens the action."""
+    if not rows:
+        st.info("No actions match.")
+        return
+    frame = pd.DataFrame(rows).fillna({"RequesterName": "not recorded"})
     for column in ("StartDate", "CompletionDate"):
-        if column in frame:
-            frame[column] = frame[column].map(day)   # as text, so a missing date is an empty cell, not "None"
-    view = frame
-    if waiting:
-        # Q4: older than 5 working days is highlighted in the queue
-        view = frame.style.apply(
-            lambda row: ["background-color: #FFF4D6" if row["WaitingWorkingDays"] > 5 else ""] * len(row), axis=1)
+        frame[column] = frame[column].map(day)   # as text, so a missing date is an empty cell, not "None"
+    shown = ["ActionId", "CircuitId", "ActionTypeName"] + (["RegionCode"] if region else []) + \
+            ["StatusName", "RequesterName", "StartDate", "CompletionDate"]
+
+    def status_cell(row):
+        ink, fill = STATUS_STYLE[row["Status"]]
+        return [f"color: {ink}; background-color: {fill}; font-weight: 600" if column == "StatusName" else ""
+                for column in row.index]
+
     event = st.dataframe(
-        view, key=key, hide_index=True, width="stretch", on_select="rerun", selection_mode="single-row",
+        frame.style.apply(status_cell, axis=1), key=key, hide_index=True, width="stretch", column_order=shown,
+        on_select="rerun", selection_mode="single-row",
         column_config={
             "ActionId": st.column_config.NumberColumn("Action", format="%d", width="small"),
             "CircuitId": "Circuit", "ActionTypeName": "Type", "RegionCode": "Region", "StatusName": "Status",
-            "RequesterName": "Requester",
-            "LastSubmittedAt": st.column_config.DatetimeColumn("Submitted", format="D MMM YYYY, HH:mm"),
-            "WaitingWorkingDays": st.column_config.NumberColumn("Waiting (working days)", format="%d"),
-            "StartDate": "Started", "CompletionDate": "Completed",
+            "RequesterName": "Requester", "StartDate": "Started", "CompletionDate": "Completed",
         })
     st.caption("Select a row to open the action.")
     if event.selection.rows:

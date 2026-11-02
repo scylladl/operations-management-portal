@@ -3,30 +3,33 @@ NorthGrid Operations Portal (fictional company). Run with:  streamlit run app.py
 
 Sign-in and navigation. The pages a role sees are a convenience: every command is checked again by the database.
 """
+import pathlib
+
 import streamlit as st
 
-from portal import auth, db, ui, users
+from portal import auth, components, db, ui, users
 
-st.set_page_config(page_title="NorthGrid Operations Portal", page_icon=":material/handyman:", layout="wide")
+ASSETS = pathlib.Path(__file__).resolve().parent / "assets"
 
 
 def sign_in_page():
-    left, _ = st.columns([2, 3])
-    with left:
-        st.title("NorthGrid Operations Portal")
-        st.caption("Improvement actions on B2B circuits: request, approval, field work and verification. "
-                   "Simulated scenario: NorthGrid Telecom and its data are fictional.")
-        with st.form("sign_in"):
-            login = st.text_input("Login")
-            password = st.text_input("Password", type="password")
-            if st.form_submit_button("Sign in", type="primary"):
-                try:
-                    st.session_state["user_id"] = auth.sign_in(ui.connection(), login.strip(), password)["UserId"]
-                    st.rerun()
-                except auth.SignInFailed as error:
-                    st.error(str(error))
+    st.html(ASSETS / "portal.css")
+    hero, _, form = st.columns([6, 1, 5], vertical_alignment="center")
+    hero.html(components.sign_in_hero())
+    with form:
+        ui.header("Welcome back", "Sign in to the portal")
+        with st.container(border=True, key="panel-sign-in"):
+            with st.form("sign_in", border=False):
+                login = st.text_input("Login")
+                password = st.text_input("Password", type="password")
+                if st.form_submit_button("Sign in", type="primary", width="stretch"):
+                    try:
+                        st.session_state["user_id"] = auth.sign_in(ui.connection(), login.strip(), password)["UserId"]
+                        st.rerun()
+                    except auth.SignInFailed as error:
+                        st.error(str(error))
         with st.expander("No account yet? Request one"):
-            with st.form("sign_up", clear_on_submit=True):
+            with st.form("sign_up", clear_on_submit=True, border=False):
                 new_login = st.text_input("Login you would like")
                 name = st.text_input("Full name")
                 new_password = st.text_input("Password (12 characters or more)", type="password")
@@ -46,11 +49,18 @@ user_id = st.session_state.get("user_id")
 # Read on every run, so a disabled account or a new role takes effect on the next click
 account = users.get_account(conn, user_id) if user_id else None
 if not account or not account["IsActive"]:
+    st.set_page_config(page_title="NorthGrid Operations Portal", page_icon=str(ASSETS / "mark.svg"), layout="wide",
+                       initial_sidebar_state="collapsed")
     # Only the identity: clearing everything would also wipe the sign-in form being submitted
     for key in ("user_id", "account"):
         st.session_state.pop(key, None)
     st.navigation([st.Page(sign_in_page, title="Sign in", icon=":material/login:")], position="hidden").run()
     st.stop()
+
+st.set_page_config(page_title="NorthGrid Operations Portal", page_icon=str(ASSETS / "mark.svg"), layout="wide",
+                   initial_sidebar_state="expanded")
+st.html(ASSETS / "portal.css")
+st.logo(str(ASSETS / "logo.svg"), icon_image=str(ASSETS / "mark.svg"), size="large")
 st.session_state["account"] = account
 role = account["RoleCode"]
 
@@ -76,9 +86,9 @@ if role == "ADM":
 sections["You"] = [page("pages/my_account.py", "My account", "person")]
 
 with st.sidebar:
-    st.markdown(f"**{ui.plain(account['DisplayName'])}**  \n{account['RoleName']}"
-                + (f" · {account['RegionName']}" if account["RegionName"] else " · all regions"))
-    if st.button("Sign out", icon=":material/logout:"):
+    st.html(components.user_chip(account["DisplayName"], f"{account['RoleName']} · "
+                                 + (account["RegionName"] or "all regions")))
+    if st.button("Sign out", icon=":material/logout:", width="stretch"):
         st.session_state.clear()
         st.rerun()
     st.caption("Simulated scenario. NorthGrid Telecom, its people and data are fictional.")

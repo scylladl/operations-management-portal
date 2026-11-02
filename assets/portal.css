@@ -1,0 +1,98 @@
+/*
+  "Service desk" design. Styles only the portal's own HTML (ng-* classes) and keyed containers
+  (st-key-card-*, st-key-panel-*), not Streamlit's internal classes, which change between releases.
+*/
+:root {
+  --ng-navy: #0F1E36;
+  --ng-ink: #1B2433;
+  --ng-muted: #5B6677;
+  --ng-line: #E3E8EF;
+  --ng-primary: #0A7FA0;
+  --ng-cyan: #4FC3E0;
+  --ng-late-ink: #8A4B00;
+  --ng-late-bg: #FFF1DB;
+}
+
+/* Cards and panels: white on the light canvas */
+[class*="st-key-card-"], [class*="st-key-panel-"] {
+  background: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(16, 30, 54, 0.05);
+}
+[class*="st-key-card-"] { transition: box-shadow 0.15s ease, border-color 0.15s ease; }
+[class*="st-key-card-"]:hover { box-shadow: 0 4px 14px rgba(16, 30, 54, 0.10); border-color: #B9D7E2; }
+
+/* Page header */
+.ng-header { margin: 0 0 0.4rem 0; }
+.ng-kicker { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ng-primary); }
+.ng-title { font-size: 1.85rem; font-weight: 700; color: var(--ng-ink); line-height: 1.2; margin: 0.15rem 0 0.25rem 0; }
+.ng-sub { font-size: 0.95rem; color: var(--ng-muted); max-width: 52rem; }
+.ng-section { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ng-muted); margin-bottom: 0.35rem; }
+
+/* Status pills */
+.ng-pill { display: inline-block; padding: 0.12rem 0.6rem; border-radius: 999px; font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+.s-Draft { color: #475467; background: #EEF1F5; }
+.s-Submitted { color: #1D4ED8; background: #E7EFFE; }
+.s-Returned { color: #8A4B00; background: #FFF1DB; }
+.s-Approved { color: #6D28D9; background: #F1EAFE; }
+.s-InProgress { color: #065F76; background: #E0F4F9; }
+.s-Completed { color: #17703D; background: #E3F5EA; }
+.s-Verified { color: #0F5132; background: #D3EFDF; }
+.s-Rejected { color: #B42318; background: #FDEBEA; }
+.s-Cancelled { color: #525C6B; background: #EEEFF2; }
+
+/* Queue cards */
+.ng-card { display: flex; flex-direction: column; gap: 0.2rem; }
+.ng-card-top { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.ng-id { font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.82rem; color: var(--ng-muted); }
+.ng-card-title { font-weight: 600; color: var(--ng-ink); font-size: 1rem; }
+.ng-card-meta { color: var(--ng-muted); font-size: 0.86rem; }
+.ng-chip { display: inline-block; padding: 0.1rem 0.55rem; border-radius: 999px; font-size: 0.78rem; font-weight: 600; color: var(--ng-muted); background: #EEF1F5; }
+.ng-chip.late { color: var(--ng-late-ink); background: var(--ng-late-bg); }
+
+/* Workflow stepper */
+.ng-stepper { display: flex; align-items: flex-start; margin: 0.6rem 0 1.1rem 0; }
+.ng-step { flex: 1; position: relative; text-align: center; font-size: 0.8rem; color: var(--ng-muted); }
+.ng-step::before { content: ""; position: absolute; top: 11px; left: -50%; width: 100%; height: 2px; background: var(--ng-line); z-index: 0; }
+.ng-step:first-child::before { display: none; }
+.ng-step .dot { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: #FFFFFF; border: 2px solid var(--ng-line); font-size: 0.75rem; font-weight: 700; color: var(--ng-muted); }
+.ng-step.done .dot { background: var(--ng-primary); border-color: var(--ng-primary); color: #FFFFFF; }
+.ng-step.done::before, .ng-step.current::before { background: var(--ng-primary); }
+.ng-step.current .dot { border-color: var(--ng-primary); color: var(--ng-primary); box-shadow: 0 0 0 4px #D6EEF5; }
+.ng-step.current { color: var(--ng-ink); font-weight: 600; }
+.ng-step.stopped .dot { border-color: #B42318; color: #B42318; box-shadow: 0 0 0 4px #FDEBEA; }
+.ng-step.stopped.grey .dot { border-color: #525C6B; color: #525C6B; box-shadow: 0 0 0 4px #EEEFF2; }
+.ng-step .label { display: block; margin-top: 0.35rem; }
+
+/* Key facts */
+.ng-facts { display: grid; grid-template-columns: auto 1fr; gap: 0.35rem 1rem; font-size: 0.88rem; }
+.ng-facts .label { color: var(--ng-muted); }
+.ng-facts .value { color: var(--ng-ink); font-weight: 500; }
+
+/* History timeline */
+.ng-timeline { list-style: none; margin: 0.4rem 0 0 0; padding: 0; }
+.ng-event { position: relative; padding: 0 0 1.1rem 2.6rem; }
+.ng-event::before { content: ""; position: absolute; left: 15px; top: 32px; bottom: 0; width: 2px; background: var(--ng-line); }
+.ng-event:last-child::before { display: none; }
+.ng-event .ng-avatar { position: absolute; left: 0; top: 0; }
+.ng-event-head { font-size: 0.9rem; color: var(--ng-ink); }
+.ng-event-head b { font-weight: 600; }
+.ng-event-time { color: var(--ng-muted); font-size: 0.8rem; }
+.ng-event-body { color: var(--ng-muted); font-size: 0.86rem; margin-top: 0.15rem; }
+.ng-reason { margin-top: 0.35rem; padding: 0.4rem 0.7rem; border-left: 3px solid var(--ng-late-ink); background: #FFF8EC; color: var(--ng-ink); font-size: 0.86rem; border-radius: 0 0.4rem 0.4rem 0; }
+
+/* Avatars and the user chip in the sidebar */
+.ng-avatar { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; font-size: 0.75rem; font-weight: 700; color: #FFFFFF; background: var(--ng-primary); }
+.ng-user { display: flex; align-items: center; gap: 0.7rem; padding: 0.7rem; border-radius: 0.6rem; background: #1A2C4A; }
+.ng-user .ng-avatar { background: var(--ng-cyan); color: var(--ng-navy); }
+.ng-user-name { color: #FFFFFF; font-weight: 600; font-size: 0.92rem; }
+.ng-user-role { color: #9FB3CF; font-size: 0.8rem; }
+
+/* Sign-in */
+.ng-hero { background: linear-gradient(150deg, #0F1E36 0%, #13365A 100%); border-radius: 1rem; padding: 2.6rem 2.4rem; color: #E7EDF6; min-height: 30rem; display: flex; flex-direction: column; justify-content: space-between; }
+.ng-hero img { width: 210px; }
+.ng-hero h1 { font-size: 2rem; line-height: 1.2; color: #FFFFFF; margin: 2.2rem 0 0.8rem 0; font-weight: 700; }
+.ng-hero p { color: #B8C7DC; font-size: 1rem; max-width: 28rem; }
+.ng-hero ul { list-style: none; padding: 0; margin: 1.6rem 0 0 0; }
+.ng-hero li { padding: 0.45rem 0 0.45rem 1.6rem; position: relative; color: #E7EDF6; font-size: 0.95rem; }
+.ng-hero li::before { content: ""; position: absolute; left: 0; top: 0.85rem; width: 0.55rem; height: 0.55rem; border-radius: 2px; background: var(--ng-cyan); transform: rotate(45deg); }
+.ng-hero small { color: #8197B5; font-size: 0.78rem; }

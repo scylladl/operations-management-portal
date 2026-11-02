@@ -11,7 +11,7 @@ how they are chosen and done.
 
 Built with **Python**, **Streamlit**, **SQL Server (T-SQL)** and PowerShell.
 
-![Decision queue](docs/screenshots/05-decision-queue.png)
+![Action page: workflow stepper, request, details and history](docs/screenshots/12-verified-history.png)
 
 ## In 30 seconds
 
@@ -20,7 +20,7 @@ Built with **Python**, **Streamlit**, **SQL Server (T-SQL)** and PowerShell.
 | **The problem** | Actions were requested by e-mail and typed into a spreadsheet. Of 558 actions in two years, none records who asked, who approved or why; 28 were cancelled without a reason; the incidents behind them were not linked. |
 | **What was delivered** | A role-based workflow (requester, approver, field coordinator, administrator) with evidence from the incident data, versions, reasons, an audit trail and follow-up indicators, plus an export that feeds the existing report without changing it. |
 | **Where the rules live** | In SQL Server: every change is a stored procedure that checks role, region, ownership, transition and row version, and writes the audit trail in the same transaction. The screens only show what the database would allow. |
-| **How it is verified** | 896 tests against a throwaway database, including every role × transition × status. Eight rules broken on purpose each make the suite fail. Indicators match an independent SQL query. The walkthrough screenshots are taken from the running app by a script. |
+| **How it is verified** | 903 tests against a throwaway database, including every role × transition × status. Eight rules broken on purpose each make the suite fail. Indicators match an independent SQL query. The walkthrough screenshots are taken from the running app by a script. |
 
 ## The problem and the requirements
 
@@ -80,8 +80,14 @@ Details: `docs/03-architecture.md` and `TECHNICAL_DECISIONS.md`.
 
 | | |
 |---|---|
+| ![Sign-in](docs/screenshots/01-sign-in.png) | ![Decision queue](docs/screenshots/05-decision-queue.png) |
 | ![New request with its evidence](docs/screenshots/03-new-request.png) | ![What changed between versions](docs/screenshots/08-version-diff.png) |
-| ![History of a verified action](docs/screenshots/12-verified-history.png) | ![Indicators](docs/screenshots/14-indicators.png) |
+
+The design ("Service desk") is a navy sidebar with the NorthGrid mark and the signed-in user, a light canvas with
+white cards, queues as cards with the waiting time, a stepper that shows where each action is in the workflow, and
+the history as a timeline. It uses Streamlit's native theme (`.streamlit/config.toml`, Inter font) and a small
+stylesheet (`assets/portal.css`) that touches only the portal's own HTML and keyed containers. Status colours pass
+WCAG AA contrast, and every status is written, not shown by colour alone.
 
 The full walkthrough, from draft to verified with a return, and a rejection: `docs/04-walkthrough.md`.
 
@@ -156,7 +162,7 @@ Proyecto de portafolio con datos simulados: portal interno en Streamlit y SQL Se
 ejecutar y verificar acciones de mejora sobre circuitos de clientes empresariales de un operador ficticio. Cuatro
 perfiles con autorización en el servidor (procedimientos almacenados que comprueban perfil, región, propiedad,
 transición y versión de fila), auditoría escrita en la misma transacción por disparadores, control de concurrencia
-optimista, contraseñas con Argon2id y una exportación que alimenta el informe existente sin modificarlo. 896
+optimista, contraseñas con Argon2id y una exportación que alimenta el informe existente sin modificarlo. 903
 pruebas automáticas, una comprobación de que las pruebas detectan reglas rotas, e indicadores validados contra una
 consulta SQL independiente.
 

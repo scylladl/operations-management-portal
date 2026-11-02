@@ -63,7 +63,7 @@ def go(page, link):
 
 def open_action(page, action_id):
     go(page, "Open an action")
-    box = page.get_by_label("Action number")
+    box = page.get_by_label("Go to action")
     box.fill(str(action_id))
     box.press("Enter")
     settle(page)
@@ -111,6 +111,7 @@ def main():
         page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=1.5)
 
         page.goto(URL)
+        page.get_by_role("button", name="Sign in").wait_for()
         shot(page, "01-sign-in")
 
         # Requester: a new request with its evidence
@@ -130,7 +131,7 @@ def main():
         shot(page, "03-new-request")
         page.get_by_role("button", name="Save and submit").click()
         settle(page)
-        action_id = int(page.get_by_label("Open action number").input_value())
+        action_id = int(page.get_by_label("Go to action").input_value())
         shot(page, "04-submitted")
         sign_out(page)
 

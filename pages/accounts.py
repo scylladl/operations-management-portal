@@ -9,7 +9,7 @@ me = account["UserId"]
 _, regions = ui.reference()
 ROLES = {"REQ": "Requester", "APR": "Approver", "FLD": "Field coordinator", "ADM": "Administrator"}
 
-st.title("Accounts")
+ui.header("Administration", "Accounts", "Create accounts, activate sign-up requests and set roles and regions.")
 rows = users.list_accounts(conn, me)
 waiting = [r for r in rows if r["RoleCode"] is None]
 if waiting:
@@ -28,7 +28,7 @@ left, right = st.columns(2, gap="large")
 with left:
     if event.selection.rows:
         chosen = rows[event.selection.rows[0]]
-        with st.form("edit"):
+        with st.container(border=True, key="panel-edit-account"), st.form("edit", border=False):
             st.subheader(f"{chosen['DisplayName']} ({chosen['Login']})")
             role_codes = list(ROLES)
             role = st.selectbox("Role", role_codes, format_func=ROLES.get,
@@ -53,7 +53,7 @@ with left:
         st.caption("Select an account to change its role, region or activation.")
 
 with right:
-    with st.form("create", clear_on_submit=True):
+    with st.container(border=True, key="panel-new-account"), st.form("create", clear_on_submit=True, border=False):
         st.subheader("New account")
         login = st.text_input("Login")
         name = st.text_input("Full name")

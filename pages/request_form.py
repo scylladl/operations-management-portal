@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 
-from portal import actions, db, ui
+from portal import actions, components, db, ui
 
 account = ui.account()
 conn = ui.connection()
@@ -21,7 +21,8 @@ if not editing:
     st.session_state["edit_action_id"] = None
 current = editing["action"] if editing else {}
 
-st.title(f"Edit request {current['ActionId']}" if editing else "New request")
+ui.header("Request", f"Edit request {current['ActionId']}" if editing else "New request",
+          "Pick the circuit, link the incidents that justify the action and say what it should achieve.")
 if current.get("Status") == "Returned":
     reason = next((e for e in reversed(editing["events"]) if e["EventType"] == "RETURN" and e["Reason"]), None)
     if reason:
@@ -45,10 +46,12 @@ circuit, incidents = evidence["circuit"], evidence["incidents"]
 window = f"{ui.day(circuit['WindowStart'])} to {ui.day(circuit['WindowEnd'])}"
 
 left, right = st.columns([3, 2], gap="large")
-with left:
-    st.markdown(f"**{circuit['CustomerName']}** ({circuit['Segment']}) · {circuit['TechnologyCode']} · "
-                f"{circuit['Province']}, {circuit['RegionName'] or 'no region'} · installed {ui.day(circuit['InstallDate'])}")
-    st.subheader(f"Incidents from {window}")
+with left, st.container(border=True, key="panel-evidence"):
+    st.html(components.section("Circuit") + components.facts([
+        ("Customer", f"{circuit['CustomerName']} ({circuit['Segment']})"), ("Technology", circuit["TechnologyCode"]),
+        ("Location", f"{circuit['Province']}, {circuit['RegionName'] or 'no region'}"),
+        ("Installed", ui.day(circuit["InstallDate"]))]))
+    st.html(components.section(f"Incidents from {window} · {len(incidents)}"))
     st.caption("The 90 days up to the latest NorthGrid extraction. Cancelled and duplicate tickets are left out.")
     if incidents:
         st.dataframe(pd.DataFrame(incidents), hide_index=True, width="stretch", column_config={
@@ -56,7 +59,7 @@ with left:
             "PriorityCode": "Priority", "RootCauseCode": "Root cause", "ResponsibleTeam": "Team", "Status": "Status"})
     else:
         st.info("No incidents in the window: a request needs at least one.")
-    st.subheader("Actions on this circuit")
+    st.html(components.section("Actions on this circuit"))
     if evidence["history"]:
         past = pd.DataFrame(evidence["history"])
         past["StartDate"], past["CompletionDate"] = past["StartDate"].map(ui.day), past["CompletionDate"].map(ui.day)
@@ -70,7 +73,8 @@ with left:
 with right:
     linked = [i["TicketId"] for i in editing["incidents"]] if editing else []
     by_ticket = {i["TicketId"]: i for i in incidents}
-    with st.form("request"):
+    with st.container(border=True, key="panel-request-form"), st.form("request", border=False):
+        st.html(components.section("The request"))
         type_codes = list(types)
         action_type = st.selectbox("Action type", type_codes, format_func=types.get,
                                    index=type_codes.index(current["ActionTypeCode"]) if current else None)

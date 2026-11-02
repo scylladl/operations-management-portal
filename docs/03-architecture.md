@@ -190,4 +190,5 @@ What the implementation changed or settled against sections 1 to 8:
 | Demo clock | `app.Setting DemoClock`: when 1, procedures record the time the caller puts in `SESSION_CONTEXT('portal.clock')`. `deploy.ps1` sets it to 0; the seed and the tests switch it on. | Seeded requests need past dates for the queue ages and indicators to mean anything. |
 | Evidence | Cancelled tickets and duplicates are not evidence; the window is the 90 days ending on the latest incident date. | A cancelled or duplicate ticket is not a failure. |
 | Circuit list | `app.usp_ListCircuits @RegionCode`, cached by the app per region. | The inventory is the same for every user. |
+| Design | "Service desk": native theme in `.streamlit/config.toml`, HTML components in `portal/components.py` rendered with `st.html`, styled by `assets/portal.css` (own classes and keyed containers only). | Chosen by the client among three directions; CSS scoped this way survives Streamlit upgrades. |
 | Markdown | Text typed by users (justifications, reasons, notes, names) is escaped before Streamlit renders it. | Found in review: Markdown would turn user text into links, images or Streamlit directives. |

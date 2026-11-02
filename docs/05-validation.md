@@ -22,7 +22,7 @@ What was checked, how, and the result on 2026-11-02. Commands run from the repos
 .venv/Scripts/python -m pytest -q
 ```
 
-896 tests, all passing, in about 10 seconds. They run against `NorthGridPortal_Test`, which the run creates from
+903 tests, all passing, in about 10 seconds. They run against `NorthGridPortal_Test`, which the run creates from
 `database/` and drops at the end; NorthGridOps is only read.
 
 | File | Tests | What they prove |
@@ -33,7 +33,7 @@ What was checked, how, and the result on 2026-11-02. Commands run from the repos
 | `test_security.py` | 8 | The app's database role cannot read or write tables or run setup procedures, can run the app procedures, and needs a NorthGridOps grant for the synonyms |
 | `test_history_export.py` | 6 | The 558 actions imported as they are; the export reproduces NorthGridOps row for row; R14; status mapping of the export |
 | `test_indicators.py` | 3 | A known request (returned once, decided after five working days), the independent check, region scope |
-| `test_ui.py` | 7 | User text cannot become Markdown links, images, HTML or Streamlit directives |
+| `test_ui.py` | 14 | User text cannot become Markdown links, images, HTML or Streamlit directives; the HTML components escape database values; the workflow stepper marks returned, rejected and cancelled actions where they stopped |
 
 The expected permissions in `test_workflow.py` are written from the requirements, not read from
 `ref.Transition`, so a wrong row in the transition table fails the tests.
